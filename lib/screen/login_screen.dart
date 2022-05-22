@@ -15,7 +15,7 @@ class _LoginscreenState extends State<Loginscreen> {
   // form key
   final formkey = GlobalKey<FormState>();
   //editing controller
-  final TextEditingController EmailController = new TextEditingController();
+  final TextEditingController usernameController = new TextEditingController();
   final TextEditingController passwordController = new TextEditingController();
 
   //calling firebase
@@ -26,26 +26,26 @@ class _LoginscreenState extends State<Loginscreen> {
     //email field
     final emailField = TextFormField(
       autofocus: false,
-      controller: EmailController,
+      controller: usernameController,
       keyboardType: TextInputType.emailAddress,
       validator: (value) {
         if (value!.isEmpty) {
-          return ("Please enter your email");
+          return ("Please enter your username");
         }
-        //reg expression for email validation
+        //reg expression for username validation
         if (!RegExp("^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+.[a-z]").hasMatch(value)) {
-          return ("Please Enter a valid email");
+          return ("this username is already taken");
         }
         return null;
       },
       onSaved: (value) {
-        EmailController.text = value!;
+        usernameController.text = value!;
       },
       textInputAction: TextInputAction.next,
       decoration: InputDecoration(
           prefixIcon: Icon(Icons.accessible_forward_outlined),
           contentPadding: EdgeInsets.fromLTRB(20, 15, 20, 15),
-          hintText: "email",
+          hintText: "username",
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
           )),
@@ -87,7 +87,7 @@ class _LoginscreenState extends State<Loginscreen> {
         padding: EdgeInsets.fromLTRB(20, 15, 20, 15),
         minWidth: MediaQuery.of(context).size.width,
         onPressed: () {
-          signin(EmailController.text, passwordController.text);
+          signin(usernameController.text, passwordController.text);
         },
         child: Text(
           "login",

@@ -19,22 +19,24 @@ class _registrationscreenState extends State<registrationscreen> {
   final nameeditingcontroller = new TextEditingController();
   final pass1editingcontroller = new TextEditingController();
   final pass2editingcontroller = new TextEditingController();
+  var focusNode = FocusNode();
 
   @override
   Widget build(BuildContext context) {
     //name field
     final emailField = TextFormField(
+      focusNode: focusNode,
       autofocus: false,
       controller: nameeditingcontroller,
       keyboardType: TextInputType.emailAddress,
       validator: (value) {
         if (value!.isEmpty) {
-          return ("Please enter your email");
+          return ("Please enter a username");
         }
         //reg expression for email validation
-        if (!RegExp("^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+.[a-z]").hasMatch(value)) {
-          return ("Please Enter a valid email");
-        }
+        /*if (!RegExp("^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+.[a-z]").hasMatch(value)) {
+          return ("this username has already been taken");
+        }*/
         return null;
       },
       onSaved: (value) {
@@ -44,7 +46,7 @@ class _registrationscreenState extends State<registrationscreen> {
       decoration: InputDecoration(
           prefixIcon: Icon(Icons.accessible_forward_outlined),
           contentPadding: EdgeInsets.fromLTRB(20, 15, 20, 15),
-          hintText: "email",
+          hintText: "username",
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
           )),
@@ -112,7 +114,9 @@ class _registrationscreenState extends State<registrationscreen> {
         padding: EdgeInsets.fromLTRB(20, 15, 20, 15),
         minWidth: MediaQuery.of(context).size.width,
         onPressed: () {
-          signup(nameeditingcontroller.text, pass1editingcontroller.text);
+          //String newemail = "";
+          signup(nameeditingcontroller.text + "@froggo.com",
+              pass1editingcontroller.text);
         },
         child: Text(
           "SignUp",
@@ -180,6 +184,13 @@ class _registrationscreenState extends State<registrationscreen> {
           )),
         ));
   }
+  /*FirebaseAuth.instance.createUserWithEmailAndPassword(email: _email, password: _password).then((user) {
+
+    // do whatever you want to do with new user object
+
+  }).catchError((e) {
+    print(e.details); // code, message, details
+  });*/
 
   void signup(String email, String pass) async {
     if (formkey.currentState!.validate()) {
@@ -187,7 +198,21 @@ class _registrationscreenState extends State<registrationscreen> {
           .createUserWithEmailAndPassword(email: email, password: pass)
           .then((value) => {postDetailsToFirebase()})
           .catchError((e) {
-        Fluttertoast.showToast(msg: e!.message);
+        print(e!.message);
+        if (e!.message ==
+            "The email address is already in use by another account.") {
+          nameeditingcontroller.clear();
+          focusNode.requestFocus();
+          //nameeditingcontroller.
+        }
+        Fluttertoast.showToast(
+          msg: "this username already exists!",
+          gravity: ToastGravity.CENTER,
+          toastLength: Toast.LENGTH_LONG,
+          backgroundColor: Color.fromARGB(255, 11, 11, 11),
+          textColor: Colors.white,
+          fontSize: 18.0,
+          );
       });
     }
   }
