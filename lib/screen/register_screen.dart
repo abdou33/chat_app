@@ -1,3 +1,4 @@
+import 'package:chat_app/model/usermodel.dart';
 import 'package:chat_app/screen/home_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -126,63 +127,73 @@ class _registrationscreenState extends State<registrationscreen> {
         ),
       ),
     );
-
-    return Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(
-              Icons.arrow_back,
-              color: Colors.green,
+      Future<bool> _onWillPop() async {
+    return false; //<-- SEE HERE
+    }
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: Icon(
+                Icons.arrow_back,
+                color: Colors.green,
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
             ),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
           ),
-        ),
-        body: Center(
-          child: SingleChildScrollView(
-              child: Container(
-            color: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Form(
-                  key: formkey,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      SizedBox(
-                        height: 150,
-                        child: Image.asset(
-                          "assets/logo.png",
-                          fit: BoxFit.contain,
+          body: Center(
+            child: SingleChildScrollView(
+                child: Container(
+              color: Colors.white,
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Form(
+                    key: formkey,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[
+                        SizedBox(
+                          height: 150,
+                          child: Image.asset(
+                            "assets/logo.png",
+                            fit: BoxFit.contain,
+                          ),
                         ),
-                      ),
-                      SizedBox(
-                        height: 45,
-                      ),
-                      emailField,
-                      SizedBox(
-                        height: 20,
-                      ),
-                      password1Field,
-                      SizedBox(
-                        height: 20,
-                      ),
-                      password2Field,
-                      SizedBox(
-                        height: 35,
-                      ),
-                      //loginbutton,
-                      signupbutton,
-                    ],
-                  )),
-            ),
+                        SizedBox(
+                          height: 45,
+                        ),
+                        emailField,
+                        SizedBox(
+                          height: 20,
+                        ),
+                        password1Field,
+                        SizedBox(
+                          height: 20,
+                        ),
+                        password2Field,
+                        SizedBox(
+                          height: 10,
+                        ),
+                        Text("dont lose your password"),
+                        Text("because we wont reset it for you X)"),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        //loginbutton,
+                        signupbutton,
+                      ],
+                    )),
+              ),
+            )),
           )),
-        ));
+    );
   }
   /*FirebaseAuth.instance.createUserWithEmailAndPassword(email: _email, password: _password).then((user) {
 
@@ -196,37 +207,77 @@ class _registrationscreenState extends State<registrationscreen> {
     if (formkey.currentState!.validate()) {
       await auth
           .createUserWithEmailAndPassword(email: email, password: pass)
-          .then((value) => {postDetailsToFirebase()})
+          .then((value) => {postDetailsToFirestore()})
           .catchError((e) {
-        print(e!.message);
         if (e!.message ==
+            "A network error (such as timeout, interrupted connection or unreachable host) has occurred.") {
+          Fluttertoast.showToast(
+            msg: "No internet connection!",
+            gravity: ToastGravity.CENTER,
+            toastLength: Toast.LENGTH_LONG,
+            backgroundColor: Color.fromARGB(255, 11, 11, 11),
+            textColor: Colors.white,
+            fontSize: 18.0,
+          );
+        } else if (e!.message ==
             "The email address is already in use by another account.") {
           nameeditingcontroller.clear();
           focusNode.requestFocus();
           //nameeditingcontroller.
-        }
-        Fluttertoast.showToast(
-          msg: "this username already exists!",
-          gravity: ToastGravity.CENTER,
-          toastLength: Toast.LENGTH_LONG,
-          backgroundColor: Color.fromARGB(255, 11, 11, 11),
-          textColor: Colors.white,
-          fontSize: 18.0,
+          //notify the user
+          Fluttertoast.showToast(
+            msg: "this username already exists!",
+            gravity: ToastGravity.CENTER,
+            toastLength: Toast.LENGTH_LONG,
+            backgroundColor: Color.fromARGB(255, 11, 11, 11),
+            textColor: Colors.white,
+            fontSize: 18.0,
           );
+        } else if (e!.message == "The email address is badly formatted.") {
+          nameeditingcontroller.clear();
+          focusNode.requestFocus();
+          Fluttertoast.showToast(
+            msg: "invalid username!",
+            gravity: ToastGravity.CENTER,
+            toastLength: Toast.LENGTH_LONG,
+            backgroundColor: Color.fromARGB(255, 11, 11, 11),
+            textColor: Colors.white,
+            fontSize: 18.0,
+          );
+        } else {
+          Fluttertoast.showToast(
+            msg: e!.message,
+            gravity: ToastGravity.CENTER,
+            toastLength: Toast.LENGTH_LONG,
+            backgroundColor: Color.fromARGB(255, 11, 11, 11),
+            textColor: Colors.white,
+            fontSize: 18.0,
+          );
+        }
       });
     }
   }
 
-  postDetailsToFirebase() async {
+  postDetailsToFirestore() async {
     //calling our firestore
     FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
     User? user = auth.currentUser;
 
+    //save data
+    UserModel usermodel = UserModel();
+
+    //writing all values
+    usermodel.uid = user!.uid;
+    usermodel.username = nameeditingcontroller.text;
+
+    await firebaseFirestore
+        .collection('users')
+        .doc(user.uid)
+        .set(usermodel.toMap());
+
     Fluttertoast.showToast(msg: "account created successfully");
 
-    Navigator.pushAndRemoveUntil(
-        (context),
-        MaterialPageRoute(builder: (context) => Homescreen()),
-        (route) => false);
+    Navigator.push(
+        (context), MaterialPageRoute(builder: (context) => Homescreen()));
   }
 }

@@ -1,3 +1,4 @@
+import 'package:chat_app/screen/home_screen.dart';
 import 'package:chat_app/screen/login_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +20,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.green,
       ),
-      home: Loginscreen(),
+      //home: Loginscreen(),
+      home: Homescreen(),
     );
   }
 }
