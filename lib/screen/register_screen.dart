@@ -1,3 +1,4 @@
+import 'package:chat_app/helper/helperfunctions.dart';
 import 'package:chat_app/model/usermodel.dart';
 import 'package:chat_app/screen/home_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -127,9 +128,10 @@ class _registrationscreenState extends State<registrationscreen> {
         ),
       ),
     );
-      Future<bool> _onWillPop() async {
-    return false; //<-- SEE HERE
+    Future<bool> _onWillPop() async {
+      return false; //<-- SEE HERE
     }
+
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
@@ -207,8 +209,11 @@ class _registrationscreenState extends State<registrationscreen> {
     if (formkey.currentState!.validate()) {
       await auth
           .createUserWithEmailAndPassword(email: email, password: pass)
-          .then((value) => {postDetailsToFirestore()})
+          .then((value){
+            postDetailsToFirestore();
+            })
           .catchError((e) {
+        print("error is ==" + e.message);
         if (e!.message ==
             "A network error (such as timeout, interrupted connection or unreachable host) has occurred.") {
           Fluttertoast.showToast(
@@ -273,7 +278,10 @@ class _registrationscreenState extends State<registrationscreen> {
     await firebaseFirestore
         .collection('users')
         .doc(user.uid)
-        .set(usermodel.toMap());
+        .set(usermodel.toMap()).then((value){
+          HelpFunctions.saveuserloggedinsharedref(true);
+          HelpFunctions.saveusernamesharedref(nameeditingcontroller.text);
+        });
 
     Fluttertoast.showToast(msg: "account created successfully");
 

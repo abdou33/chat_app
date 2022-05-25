@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:chat_app/widget/custom_page_route.dart';
 
+import '../helper/helperfunctions.dart';
+
 class Loginscreen extends StatefulWidget {
   const Loginscreen({Key? key}) : super(key: key);
 
@@ -100,8 +102,9 @@ class _LoginscreenState extends State<Loginscreen> {
       ),
     );
     Future<bool> _onWillPop() async {
-    return false; //<-- SEE HERE
+      return false; //<-- SEE HERE
     }
+
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
@@ -173,10 +176,15 @@ class _LoginscreenState extends State<Loginscreen> {
     if (formkey.currentState!.validate()) {
       await auth
           .signInWithEmailAndPassword(email: email, password: pass)
-          .then((uid) => {
-                Navigator.of(context).push(CustomPageRoute(child: Homescreen()))
-              })
-          .catchError((e) {
+          .then((uid){
+        HelpFunctions.saveuserloggedinsharedref(true);
+        HelpFunctions.saveusernamesharedref(usernameController.text);
+        Navigator.of(context).push(CustomPageRoute(child: Homescreen()));
+      }).catchError((e) {
+        print("error007 is ==" + e!.message);
+        if (e == null) {
+          print("e is null");
+        }
         print(e!.message);
         if (e!.message ==
             "The password is invalid or the user does not have a password.") {
@@ -188,8 +196,7 @@ class _LoginscreenState extends State<Loginscreen> {
             textColor: Colors.white,
             fontSize: 18.0,
           );
-        }
-        else if (e! ==
+        } else if (e! ==
             "There is no user record corresponding to this identifier. The user may have been deleted.") {
           Fluttertoast.showToast(
             msg: "this username does not exist!",
@@ -199,8 +206,7 @@ class _LoginscreenState extends State<Loginscreen> {
             textColor: Colors.white,
             fontSize: 18.0,
           );
-        }
-        else {
+        } else {
           Fluttertoast.showToast(
             msg: e!.message,
             gravity: ToastGravity.CENTER,

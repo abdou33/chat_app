@@ -1,3 +1,5 @@
+import 'package:chat_app/helper/constant.dart';
+import 'package:chat_app/helper/helperfunctions.dart';
 import 'package:chat_app/screen/login_screen.dart';
 import 'package:chat_app/search.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +17,22 @@ class _HomescreenState extends State<Homescreen> {
     return false; //<-- SEE HERE
   }
 
+  String username2 = "";
+
+  void initState() {
+    getuserinfo();
+    super.initState();
+  }
+
+  getuserinfo() async {
+    await HelpFunctions.getusernamesharedref().then((value) {
+      setState(() {
+        username2 = value!;
+        Constants.Myusername = username2;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -22,14 +40,25 @@ class _HomescreenState extends State<Homescreen> {
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          title: Image.asset(
-            "assets/logo.png",
-            height: 50,
+          title: Row(
+            children: [
+              Image.asset(
+                "assets/logo.png",
+                height: 50,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Text(
+                  username2,
+                ),
+              ),
+            ],
           ),
           actions: [
             GestureDetector(
               onTap: () {
                 //for sign out
+                signout();
                 Navigator.push((context),
                     MaterialPageRoute(builder: (context) => Loginscreen()));
               },
@@ -49,4 +78,11 @@ class _HomescreenState extends State<Homescreen> {
       ),
     );
   }
+}
+
+signout() async {
+  await HelpFunctions.saveuserloggedinsharedref(false);
+  HelpFunctions.getuserloggedinsharedref().then((value) {
+    print(value);
+  });
 }
