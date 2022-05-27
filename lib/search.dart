@@ -43,9 +43,15 @@ class _searchstringState extends State<searchstring> {
       "users": users,
       "chatroomID": chatroomid,
     };
-    databasemethodes.createchatroom(chatroomid, Chatroommap);
-    Navigator.push(
-        context, MaterialPageRoute(builder: (context) => ConversationScreen()));
+    if (username != Constants.Myusername) {
+      databasemethodes.createchatroom(chatroomid, Chatroommap);
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => ConversationScreen(
+            chatroomid, username
+          )));
+    } else {
+      print("you cant start a conversation with yourself");
+    }
   }
 
   Widget SearchTile({String? username}) {
@@ -115,6 +121,7 @@ class _searchstringState extends State<searchstring> {
                 children: [
                   Expanded(
                     child: TextField(
+                      showCursor: false,
                       autofocus: true,
                       controller: searcheditingcontroller,
                       style: TextStyle(
@@ -138,7 +145,9 @@ class _searchstringState extends State<searchstring> {
                       height: 40,
                       width: 40,
                       padding: EdgeInsets.all(2),
-                      child: Image.asset("assets/logo.png"),
+                      decoration: BoxDecoration(
+                  color: Colors.white, borderRadius: BorderRadius.circular(40)),
+                      child: Image.asset("assets/search_button.png"),
                     ),
                   ),
                 ],

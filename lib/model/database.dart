@@ -24,4 +24,31 @@ class databasemethods {
       print(e.toString());
     });
   }
+
+  addcnvmessages(String chatroomid, messagemap) {
+    FirebaseFirestore.instance
+        .collection("chatrooms")
+        .doc(chatroomid)
+        .collection("chats")
+        .add(messagemap)
+        .catchError((e) {
+      print(e.message);
+    });
+  }
+
+  getcnvmessages(String chatroomid) async {
+    return await FirebaseFirestore.instance
+        .collection("chatrooms")
+        .doc(chatroomid)
+        .collection("chats")
+        .orderBy("time", descending: false)
+        .snapshots();
+  }
+
+  getchatrooms(String username) async{
+    return await FirebaseFirestore.instance
+        .collection("chatrooms")
+        .where("users", arrayContains: username)
+        .snapshots();
+  }
 }
