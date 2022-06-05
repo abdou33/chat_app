@@ -1,10 +1,14 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:intl/intl.dart';
 
 import 'package:chat_app/helper/constant.dart';
 import 'package:chat_app/model/database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+
+import '../model/notification_service.dart';
 
 class ConversationScreen extends StatefulWidget {
   final String chatroomId;
@@ -19,7 +23,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
   databasemethods databasemethodes = new databasemethods();
   TextEditingController msgeditingcontroller = new TextEditingController();
   Stream<QuerySnapshot>? chatmessageStream;
-  int datacount = 0;
 
   // here we set the timer to call the event
   ScrollController _myController = ScrollController();
@@ -39,10 +42,26 @@ class _ConversationScreenState extends State<ConversationScreen> {
                       Map<String, dynamic> data =
                           document.data()! as Map<String, dynamic>;
                       //print(data["message"]);
-                      datacount = data.length;
+                      if (Constants.Myusername != data["sendby"] &&
+                          (DateTime.now().millisecondsSinceEpoch -
+                                  data["time"]) < 5000) {
+                        print("diference = " + (DateTime.now().millisecondsSinceEpoch - data["time"]).toString());
+                        Notifivationapi.showNotification(
+                          title: data["sendby"],
+                          body: data["message"],
+                          payload: '',
+                        );
+                      }
+                      Future.delayed(Duration(milliseconds: 100), () {
+                        _myController.animateTo(
+                            _myController.position.maxScrollExtent,
+                            duration: Duration(milliseconds: 50),
+                            curve: Curves.ease);
+                      });
                       return messagetile(
                         data["message"],
                         Constants.Myusername == data["sendby"],
+                        data["time"],
                       );
                     }).toList(),
                   )
@@ -62,11 +81,10 @@ class _ConversationScreenState extends State<ConversationScreen> {
       databasemethodes.addcnvmessages(widget.chatroomId, messagemap);
       msgeditingcontroller.clear();
       //
-      Future.delayed(Duration(milliseconds: 100), (){
-          _myController.animateTo(_myController.position.maxScrollExtent,
-          duration: Duration(milliseconds: 100), curve: Curves.ease);
+      Future.delayed(Duration(milliseconds: 100), () {
+        _myController.animateTo(_myController.position.maxScrollExtent,
+            duration: Duration(milliseconds: 100), curve: Curves.ease);
       });
-      
     }
   }
 
@@ -153,10 +171,14 @@ class _ConversationScreenState extends State<ConversationScreen> {
   }
 }
 
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+
 class messagetile extends StatelessWidget {
   final String message;
   final bool sendby;
-  messagetile(this.message, this.sendby);
+  final int time;
+  messagetile(this.message, this.sendby, this.time);
 
   @override
   Widget build(BuildContext context) {
@@ -164,27 +186,41 @@ class messagetile extends StatelessWidget {
       padding: EdgeInsets.only(
           top: 8, bottom: 8, left: sendby ? 0 : 24, right: sendby ? 24 : 0),
       alignment: sendby ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: sendby ? EdgeInsets.only(left: 30) : EdgeInsets.only(right: 30),
-        padding: EdgeInsets.only(top: 17, bottom: 17, left: 20, right: 20),
-        decoration: BoxDecoration(
-            borderRadius: sendby
-                ? BorderRadius.only(
-                    topLeft: Radius.circular(23),
-                    topRight: Radius.circular(23),
-                    bottomLeft: Radius.circular(23))
-                : BorderRadius.only(
-                    topLeft: Radius.circular(23),
-                    topRight: Radius.circular(23),
-                    bottomRight: Radius.circular(23)),
-            color: Colors.green),
-        child: Text(message,
-            textAlign: TextAlign.start,
-            style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontFamily: 'OverpassRegular',
-                fontWeight: FontWeight.w300)),
+      child: Column(
+        children: [
+          Container(
+            margin:
+                sendby ? EdgeInsets.only(left: 30) : EdgeInsets.only(right: 30),
+            padding: EdgeInsets.only(top: 17, bottom: 17, left: 20, right: 20),
+            decoration: BoxDecoration(
+                borderRadius: sendby
+                    ? BorderRadius.only(
+                        topLeft: Radius.circular(23),
+                        topRight: Radius.circular(23),
+                        bottomLeft: Radius.circular(23))
+                    : BorderRadius.only(
+                        topLeft: Radius.circular(23),
+                        topRight: Radius.circular(23),
+                        bottomRight: Radius.circular(23)),
+                color: Colors.green),
+            child: Text(message,
+                textAlign: TextAlign.start,
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontFamily: 'OverpassRegular',
+                    fontWeight: FontWeight.w500)),
+          ),
+          Text(
+              DateFormat('dd/MM/yyyy, HH:mm')
+                  .format(DateTime.fromMillisecondsSinceEpoch(time))
+                  .toString(),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w300)),
+        ],
       ),
     );
   }
